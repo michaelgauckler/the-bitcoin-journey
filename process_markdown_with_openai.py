@@ -3,7 +3,9 @@ import re
 import os
 
 # Initialize the OpenAI client
-client = OpenAI()
+client = OpenAI(
+    api_key="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"
+)
 
 def parse_markdown_to_tree(md_path):
     """Parse markdown file into a nested data structure based on heading levels."""
@@ -45,9 +47,9 @@ def call_openai_api(prompt):
     """Call OpenAI's API with the given prompt."""
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant who writes well-structured content with clear paragraphs and headlines."},
+                {"role": "system", "content": "You are a helpful assistant and expert on Bitcoin who writes well-structured content with clear paragraphs and headlines."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=500,
@@ -74,7 +76,7 @@ def traverse_and_process(tree, max_calls=1000):
         if "H3" in node:
             for h3 in node["H3"]:
                 if call_count < max_calls:
-                    prompt = f"Write half a page, well structured in paragraphs with headlines on this point: {h3['title']}"
+                    prompt = f"In the context of an educational course on Bitcoin write half a page, well structured in paragraphs on this point: {h3['title']}"
                     print(f"Calling OpenAI API for: {h3['title']}")
                     response = call_openai_api(prompt)
                     if response:
