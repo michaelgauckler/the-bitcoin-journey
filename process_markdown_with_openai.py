@@ -3,8 +3,7 @@ import re
 import os
 
 # Initialize the OpenAI client
-client = OpenAI(
-)
+client = OpenAI()
 
 def parse_markdown_to_tree(md_path):
     """Parse markdown file into a nested data structure based on heading levels."""
