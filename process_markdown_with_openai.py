@@ -4,7 +4,6 @@ import os
 
 # Initialize the OpenAI client
 client = OpenAI(
-    api_key="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"
 )
 
 def parse_markdown_to_tree(md_path):
