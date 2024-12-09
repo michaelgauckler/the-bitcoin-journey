@@ -30,7 +30,7 @@ def extract_headings_and_text_with_h4(md_path):
                 current_text = []
             continue
 
-        # Process headings
+        # Process headings - remove any asterisks and trailing hashtags from the title
         if line.startswith('# ') and not line.startswith('## '):  # H1
             if current_text:  # Add any accumulated text before switching sections
                 if current_h3 and current_h3.get("H4"):
@@ -43,7 +43,11 @@ def extract_headings_and_text_with_h4(md_path):
                     current_h1["text"].extend(current_text)
                 current_text = []
             
-            current_h1 = {"title": line[2:], "H2": [], "text": []}
+            title = line[2:].strip()
+            # Remove asterisks and trailing hashtags
+            title = re.sub(r'\*+', '', title)
+            title = re.sub(r'\s*#*\s*$', '', title)  # Remove trailing hashtags
+            current_h1 = {"title": title, "H2": [], "text": []}
             content["H1"].append(current_h1)
             current_h2 = None
             current_h3 = None
@@ -61,7 +65,11 @@ def extract_headings_and_text_with_h4(md_path):
                 current_text = []
             
             if current_h1:
-                current_h2 = {"title": line[3:], "H3": [], "text": []}
+                title = line[3:].strip()
+                # Remove asterisks and trailing hashtags
+                title = re.sub(r'\*+', '', title)
+                title = re.sub(r'\s*#*\s*$', '', title)  # Remove trailing hashtags
+                current_h2 = {"title": title, "H3": [], "text": []}
                 current_h1["H2"].append(current_h2)
                 current_h3 = None
                 
@@ -76,7 +84,11 @@ def extract_headings_and_text_with_h4(md_path):
                 current_text = []
             
             if current_h2:
-                current_h3 = {"title": line[4:], "H4": [], "text": []}
+                title = line[4:].strip()
+                # Remove asterisks and trailing hashtags
+                title = re.sub(r'\*+', '', title)
+                title = re.sub(r'\s*#*\s*$', '', title)  # Remove trailing hashtags
+                current_h3 = {"title": title, "H4": [], "text": []}
                 current_h2["H3"].append(current_h3)
                 
         elif line.startswith('#### '):  # H4
@@ -86,7 +98,11 @@ def extract_headings_and_text_with_h4(md_path):
                 current_text = []
             
             if current_h3:
-                h4_entry = {"title": line[5:], "text": []}
+                title = line[5:].strip()
+                # Remove asterisks and trailing hashtags
+                title = re.sub(r'\*+', '', title)
+                title = re.sub(r'\s*#*\s*$', '', title)  # Remove trailing hashtags
+                h4_entry = {"title": title, "text": []}
                 current_h3["H4"].append(h4_entry)
                 
         else:  # Regular text or lists
@@ -160,161 +176,162 @@ def generate_section_html(h1, section_index):
     section_html = f'<h1 id="section{section_index}">{h1["title"]}</h1>'
     for paragraph in h1["text"]:
         if paragraph.strip():
-            section_html += f"{paragraph}<br><br>"
+            section_html += f"{paragraph}"
     for j, h2 in enumerate(h1["H2"], 1):
         section_html += f'<h2 id="section{section_index}-{j}">{h2["title"]}</h2>'
         for paragraph in h2["text"]:
             if paragraph.strip():
-                section_html += f"{paragraph}<br><br>"
+                section_html += f"{paragraph}"
         for k, h3 in enumerate(h2["H3"], 1):
             section_html += f'<h3 id="section{section_index}-{j}-{k}">{h3["title"]}</h3>'
             for paragraph in h3["text"]:
                 if paragraph.strip():
-                    section_html += f"{paragraph}<br><br>"
+                    section_html += f"{paragraph}"
             for l, h4 in enumerate(h3["H4"], 1):
                 section_html += f'<h4 id="section{section_index}-{j}-{k}-{l}">{h4["title"]}</h4>'
                 for paragraph in h4.get("text", []):
                     if paragraph.strip():
-                        section_html += f"{paragraph}<br><br>"
-    section_html += """
-    <script>
-    document.querySelectorAll('.scroll-link').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetID = this.getAttribute('href').substring(1);
-            const targetElement = document.getElementById(targetID);
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
-    });
-    </script>
-    """
+                        section_html += f"{paragraph}"
     return section_html
 
 def generate_html_sections(content_structure):
     """Generate HTML sections with styling that matches the reference design"""
     html = '''
     <style>
-        h1, h2, h3, p {
+        /* Base styles */
+        body {
             font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background-color: #ffffff;
             margin: 0;
             padding: 0;
-            width: 100%;
         }
-        
-        /* Main title style */
+
+        /* Typography scale and spacing */
+        h1, h2, h3, h4, p {
+            margin: 0;
+            padding: 0;
+            font-weight: normal;
+        }
+
         h1 {
-            color: #000000;
-            font-size: 3.5em;
-            line-height: 1.25;
+            font-size: 2.81em;
+            line-height: 1.2;
             font-weight: 700;
-            letter-spacing: -0.2rem;
+            margin-bottom: 2rem;
+            color: #111827;
+            letter-spacing: -0.02em;
         }
-        
-        /* Section title style */
+
         h2 {
-            color: #000000;
-            font-size: 2em;
-            line-height: 1.25;
-            font-weight: 700;
-            letter-spacing: -0.075rem;
+            font-size: 2.31em;
+            line-height: 1.3;
+            font-weight: 600;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            letter-spacing: -0.01em;
         }
-        
-        /* Paragraph text style */
+
+        h3 {
+            font-size: 1.45em;
+            line-height: 1.4;
+            font-weight: 600;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        h4 {
+            font-size: 1.25em;
+            line-height: 1.5;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            color: #4b5563;
+        }
+
         p {
-            color: #000000;
-            font-size: 1em;
-            line-height: 1.625;
-            font-weight: 300;
-            letter-spacing: 0.025rem;
+            /* font-size: 1.15em; */
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #374151;
         }
-        
-        /* Container spacing */
+
+        /* Container and spacing */
         .container {
-            padding: 4rem 6rem;
-            margin: 6rem 0;
+            max-width: 65rem;      /* Increased from 48rem for better readability */
+            margin: 0 auto;
+            padding: 2rem;
         }
-        
+
+        .section {
+            margin-bottom: 3rem;    /* Reduced from 4rem */
+            padding: 2rem;
+            background: #ffffff;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
         /* Responsive adjustments */
-        @media (max-width: 736px) {
+        @media (max-width: 768px) {
             .container {
-                padding: 3rem 2rem;
-                margin: 4rem 0;
+                padding: 1rem;
             }
-            
-            h1 { 
-                font-size: 3em;
-                letter-spacing: -0.175rem;
+
+            h1 {
+                font-size: 2.25em;
+                margin-bottom: 1.5rem;
             }
-            
+
             h2 {
-                font-size: 2em;
-                letter-spacing: -0.065625rem;
+                font-size: 1.85em;
+                margin-top: 2.5rem;
+                margin-bottom: 1.25rem;
             }
-            
+
+            h3 {
+                font-size: 1.35em;
+                margin-top: 2rem;
+                margin-bottom: 0.875rem;
+            }
+
+            h4 {
+                font-size: 1.15em;
+                margin-top: 1.75rem;
+                margin-bottom: 0.625rem;
+            }
+
             p {
-                letter-spacing: 0.021875rem;
+                font-size: 1.1em;
+                margin-bottom: 0.875rem;  /* Reduced from 1.25rem */
             }
         }
-        
-        /* Text formatting */
-        strong {
-            color: inherit;
-            font-weight: 700;
-        }
-        
-        em {
-            font-style: italic;
-        }
-        
-        /* Lists */
+
+        /* List styles */
         ul, ol {
-            list-style: none;
-            margin: 1.5rem 0;
+            margin: 0 0 1.5rem 0;
             padding-left: 1.5rem;
         }
-        
-        ul li, ol li {
-            color: #000000;
-            font-family: 'Inter', sans-serif;
-            font-size: 1em;
-            line-height: 1.625;
-            font-weight: 300;
-            letter-spacing: 0.025rem;
-            position: relative;
-            margin: 0.5rem 0;
+
+        li {
+            font-size: 1.125rem;
+            line-height: 1.75;
+            margin-bottom: 0.5rem;
+            color: #374151;
         }
-        
-        ul li:before {
-            content: "•";
-            position: absolute;
-            left: -1.5rem;
-            color: #000000;
+
+        /* Links */
+        a {
+            color: #2563eb;
+            text-decoration: none;
+            transition: color 0.2s ease;
         }
-        
-        ol {
-            counter-reset: item;
-        }
-        
-        ol li:before {
-            content: counter(item) ".";
-            counter-increment: item;
-            position: absolute;
-            left: -1.5rem;
-            color: #000000;
-            font-weight: 400;
-        }
-        
-        @media (max-width: 736px) {
-            ul, ol {
-                margin: 1rem 0;
-                padding-left: 1.25rem;
-            }
-            
-            ul li:before, ol li:before {
-                left: -1.25rem;
-            }
+
+        a:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
         }
     </style>
     '''
@@ -408,11 +425,11 @@ def generate_html_sections(content_structure):
         }
         h1 { font-size: 2.81em; }
         h2 { font-size: 1.31em; }
-        h3 { font-size: 0.94em; }
+        h3 { font-size: 1.05em; }
         h4 { font-size: 0.75em; }
         p {
             color: #3B3B3B;
-            font-size: 0.45em;
+            /* font-size: 0.45em; */    
             line-height: 1.75;
             text-align: left;
         }
@@ -494,9 +511,13 @@ def save_sections_to_files(toc_html, sections_html, output_dir=""):
     try:
         import os
         
-        # Create output directory if it doesn't exist
-        os.makedirs(output_dir, exist_ok=True)
-        print(f"Created/verified output directory: {output_dir}")
+        # If output_dir is empty, use current directory
+        output_dir = output_dir or "."
+        
+        # Create output directory if it doesn't exist and it's not the current directory
+        if output_dir != ".":
+            os.makedirs(output_dir, exist_ok=True)
+            print(f"Created/verified output directory: {output_dir}")
         
         # Save TOC
         toc_path = os.path.join(output_dir, "toc.html")
