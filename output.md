@@ -1998,7 +1998,7 @@ Leverage is closely related to margin trading and refers to the ratio between th
 *Understanding the withdrawal process in Bitcoin not only safeguards your assets but also enhances your proficiency in managing cryptocurrency transactions. By familiarizing yourself with each step and being diligent about security, you can ensure that your Bitcoin reaches its intended destination safely and efficiently.*
 
 
-## Main Bullet 2: Reading the Market ##
+## Reading the Market ##
 
 ### Basics of candlestick charts. ###
 
@@ -2751,7 +2751,7 @@ Leverage is closely related to margin trading and refers to the ratio between th
 
 # 100 Hours to Investor #
 
-## Main Bullet 1: Bitcoin as an Investment Asset ##
+## Bitcoin as an Investment Asset ##
 
 ### Understanding Bitcoin as “digital gold.” ###
 
