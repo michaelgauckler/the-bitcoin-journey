@@ -169,16 +169,23 @@ def generate_toc(content):
     """
     return toc_html
 
-def generate_section_html(h1, section_index):
+def generate_section_html(h1, section_index, include_h1_title=False):
     """
     Generate HTML content for a single H1 section.
+    Args:
+        h1: The H1 section content
+        section_index: The section index
+        include_h1_title: Boolean flag to control whether H1 title is included (default True)
     """
-    section_html = f'<h1 id="section{section_index}">{h1["title"]}</h1>'
+    section_html = ""
+    if include_h1_title:
+        section_html = f'<h1 id="section{section_index}">{h1["title"]}</h1>'
+    
     for paragraph in h1["text"]:
         if paragraph.strip():
             # Check if the paragraph starts with ####
             if paragraph.strip().startswith('####'):
-                section_html += f"<b>{paragraph[5:-5]}</b>"  # Keep the #### format
+                section_html += f"{paragraph}"  # Keep the #### format
             else:
                 section_html += f"{paragraph}"
     for j, h2 in enumerate(h1["H2"], 1):
@@ -186,7 +193,7 @@ def generate_section_html(h1, section_index):
         for paragraph in h2["text"]:
             if paragraph.strip():
                 if paragraph.strip().startswith('####'):
-                    section_html += f"<b>{paragraph[5:-5]}</b>"  # Keep the #### format
+                    section_html += f"{paragraph}"  # Keep the #### format
                 else:
                     section_html += f"{paragraph}"
         for k, h3 in enumerate(h2["H3"], 1):
@@ -194,7 +201,7 @@ def generate_section_html(h1, section_index):
             for paragraph in h3["text"]:
                 if paragraph.strip():
                     if paragraph.strip().startswith('####'):
-                        section_html += f"<b>{paragraph[5:-5]}</b>"  # Keep the #### format
+                        section_html += f"{paragraph}"  # Keep the #### format
                     else:
                         section_html += f"{paragraph}"
     return section_html
