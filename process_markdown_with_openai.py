@@ -2,8 +2,15 @@ from openai import OpenAI
 import re
 import os
 
-# Initialize the OpenAI client
-client = OpenAI()
+# Get API key from environment and print it (first 8 chars only for security)
+api_key = os.environ.get('OPENAI_API_KEY')
+if api_key:
+    print(f"Found API key: {api_key[:8]}...")
+else:
+    raise ValueError("OPENAI_API_KEY environment variable not found")
+
+# Initialize the OpenAI client with explicit API key
+client = OpenAI(api_key=api_key)
 
 def parse_markdown_to_tree(md_path):
     """Parse markdown file into a nested data structure based on heading levels."""
@@ -18,27 +25,27 @@ def parse_markdown_to_tree(md_path):
     for line in lines:
         line = line.strip()
         
-        if line.startswith('# ') and not line.startswith('## '):  # H1
-            current_h1 = {"title": line[2:], "H2": []}
+        if line.startswith('# ') and not line.startswith('## ') and not line.startswith('### '):  # H1
+            current_h1 = {"title": line[2:-2], "H2": []}
             tree.append(current_h1)
             current_h2 = None
             current_h3 = None
             
         elif line.startswith('## '):  # H2
             if current_h1:
-                current_h2 = {"title": line[3:], "H3": []}
+                current_h2 = {"title": line[3:-3], "H3": []}
                 current_h1["H2"].append(current_h2)
                 current_h3 = None
                 
         elif line.startswith('### '):  # H3
             if current_h2:
-                current_h3 = {"title": line[4:], "content": []}
+                current_h3 = {"title": line[4:-4], "content": []}
                 current_h2["H3"].append(current_h3)
                 
         else:  # Regular text
             if current_h3:
                 current_h3["content"].append(line)
-    
+
     return tree
 
 def call_openai_api(prompt):
@@ -53,10 +60,22 @@ def call_openai_api(prompt):
             max_tokens=500,
             temperature=0.7
         )
-        # Wrap each paragraph with '####', make content italic, and add newline
+        # Make content italic and add newline
         content = response.choices[0].message.content.strip()
         paragraphs = content.split('\n\n')
-        content_with_separators = '\n\n'.join(f'#### *{p.strip()}* ####' for p in paragraphs if p.strip())
+        
+        # Process each paragraph differently based on if it starts with ####
+        formatted_paragraphs = []
+        for p in paragraphs:
+            if p.strip():
+                if p.strip().startswith('####'):
+                    formatted_paragraphs.append(f'{p.strip()} ####')
+                elif p.strip().startswith('###'):
+                    formatted_paragraphs.append(f'#{p.strip()} ####')
+                else:
+                    formatted_paragraphs.append(f'*{p.strip()}*')
+        
+        content_with_separators = '\n\n'.join(formatted_paragraphs)
         return content_with_separators
     except Exception as e:
         print(f"Error calling OpenAI API: {str(e)}")
@@ -96,7 +115,7 @@ def export_tree_to_markdown(tree, output_path):
     with open(output_path, 'w', encoding='utf-8') as f:
         for h1 in tree:
             # Write H1
-            f.write(f"# {h1['title']}\n\n")
+            f.write(f"# {h1['title']} #\n\n")
             
             # Write H1 content if any
             if 'content' in h1:
@@ -106,7 +125,7 @@ def export_tree_to_markdown(tree, output_path):
             
             # Process H2 sections
             for h2 in h1.get("H2", []):
-                f.write(f"## {h2['title']}\n\n")
+                f.write(f"## {h2['title']} ##\n\n")
                 
                 # Write H2 content if any
                 if 'content' in h2:
@@ -116,7 +135,7 @@ def export_tree_to_markdown(tree, output_path):
                 
                 # Process H3 sections
                 for h3 in h2.get("H3", []):
-                    f.write(f"### {h3['title']}\n\n")
+                    f.write(f"### {h3['title']} ###\n\n")
                     
                     # Write original H3 content if any
                     if 'content' in h3 and h3['content']:
@@ -126,7 +145,11 @@ def export_tree_to_markdown(tree, output_path):
                     
                     # Write generated content if available
                     if 'generated_content' in h3:
-                        f.write(f"{h3['generated_content']}\n\n")
+                        # Split content into lines and skip the first one
+                        content_lines = h3['generated_content'].split('\n')
+                        if len(content_lines) > 1:
+                            remaining_content = '\n'.join(content_lines[1:])
+                            f.write(f"{remaining_content}\n\n")
                     
                 f.write("\n")  # Extra space between sections
             

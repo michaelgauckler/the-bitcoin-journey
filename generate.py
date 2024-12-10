@@ -176,21 +176,26 @@ def generate_section_html(h1, section_index):
     section_html = f'<h1 id="section{section_index}">{h1["title"]}</h1>'
     for paragraph in h1["text"]:
         if paragraph.strip():
-            section_html += f"{paragraph}"
+            # Check if the paragraph starts with ####
+            if paragraph.strip().startswith('####'):
+                section_html += f"<b>{paragraph[5:-5]}</b>"  # Keep the #### format
+            else:
+                section_html += f"{paragraph}"
     for j, h2 in enumerate(h1["H2"], 1):
         section_html += f'<h2 id="section{section_index}-{j}">{h2["title"]}</h2>'
         for paragraph in h2["text"]:
             if paragraph.strip():
-                section_html += f"{paragraph}"
+                if paragraph.strip().startswith('####'):
+                    section_html += f"<b>{paragraph[5:-5]}</b>"  # Keep the #### format
+                else:
+                    section_html += f"{paragraph}"
         for k, h3 in enumerate(h2["H3"], 1):
             section_html += f'<h3 id="section{section_index}-{j}-{k}">{h3["title"]}</h3>'
             for paragraph in h3["text"]:
                 if paragraph.strip():
-                    section_html += f"{paragraph}"
-            for l, h4 in enumerate(h3["H4"], 1):
-                section_html += f'<h4 id="section{section_index}-{j}-{k}-{l}">{h4["title"]}</h4>'
-                for paragraph in h4.get("text", []):
-                    if paragraph.strip():
+                    if paragraph.strip().startswith('####'):
+                        section_html += f"<b>{paragraph[5:-5]}</b>"  # Keep the #### format
+                    else:
                         section_html += f"{paragraph}"
     return section_html
 
